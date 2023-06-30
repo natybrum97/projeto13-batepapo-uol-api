@@ -25,13 +25,6 @@ const db = mongoClient.db();
 
 app.post("/participants", async (req, res) => {
 
-    if (Object.keys(req.body).length === 0) {
-        return res.status(422).send("Objeto vazio. Forneça os dados necessários.");
-    }
-
-    const sanitizedName = stripHtml(req.body.name).result.trim()
-    console.log(sanitizedName);
-
     const schemaUsuario = Joi.object({
         name: Joi.string().required()
     })
@@ -42,6 +35,9 @@ app.post("/participants", async (req, res) => {
         const errors = validation.error.details.map(detail => detail.message);
         return res.status(422).send(errors);
     }
+
+    const sanitizedName = stripHtml(req.body.name).result.trim()
+    console.log(sanitizedName);
 
     try {
         const usuario = await db.collection("participants").findOne({ name: sanitizedName });
