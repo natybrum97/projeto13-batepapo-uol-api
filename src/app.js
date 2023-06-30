@@ -81,7 +81,7 @@ app.post("/messages", async (req, res) => {
         return res.status(422).send(errors);
     }
 
-    if(!user){
+    if (!user) {
         return res.status(422).send("Não recebemos o user");
     }
 
@@ -105,34 +105,33 @@ app.post("/messages", async (req, res) => {
 
 app.get("/messages", async (req, res) => {
     const limit = parseInt(req.query.limit);
+    console.log(limit);
     const user = req.headers.user;
-  
+
     try {
-      let mensagens = await db.collection("messages").find({
-        $or: [
-          { to: "Todos" },
-          { to: user },
-          { from: user }
-        ]
-      }).toArray();
-  
-      if (limit) {
-        if (typeof limit === 'number' && limit > 0 && Number.isInteger(limit)) {
-          // Verificar se o número de mensagens é maior que o limite
-          if (mensagens.length > limit) {
-            mensagens = mensagens.slice(-limit);
-          }
+        let mensagens = await db.collection("messages").find({
+            $or: [
+                { to: "Todos" },
+                { to: user },
+                { from: user }
+            ]
+        }).toArray();
+
+        if (limit !== null && typeof limit === 'number' && limit > 0 && Number.isInteger(limit)) {
+            // Verificar se o número de mensagens é maior que o limite
+            if (mensagens.length > limit) {
+                mensagens = mensagens.slice(-limit);
+            }
         } else {
-          return res.status(422).send("Limite inválido. Certifique-se de que é um número inteiro positivo.");
+            return res.status(422).send("Limite inválido. Certifique-se de que é um número inteiro positivo.");
         }
-      }
-  
-      res.send(mensagens);
+
+        res.send(mensagens);
     } catch (err) {
-      res.status(500).send(err.message);
+        res.status(500).send(err.message);
     }
-  });
-  
+});
+
 
 const PORT = 5000;
 
