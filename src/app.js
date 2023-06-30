@@ -81,9 +81,14 @@ app.post("/messages", async (req, res) => {
         return res.status(422).send(errors);
     }
 
+    if(!user){
+        return res.status(422).send("Não recebemos o user");
+    }
+
     try {
         const usuario = await db.collection("participants").findOne({ name: user });
-        if (!usuario) return res.status(401).send("Esse usuário não está na lista de participantes! Faça o Login novamente.");
+        console.log(usuario)
+        if (!usuario) return res.status(422).send("Esse usuário não está na lista de participantes! Faça o Login novamente.");
 
         const data = dayjs();
 
@@ -99,34 +104,35 @@ app.post("/messages", async (req, res) => {
 })
 
 app.get("/messages", async (req, res) => {
-
     const limit = parseInt(req.query.limit);
-
     const user = req.headers.user;
-
+  
     try {
-        const mensagens = await db.collection("messages").find({
-            $or: [
-                { to: "Todos" },
-                { to: user },
-                { from: user }
-            ]
-        }).toArray();
-
-        if (limit) {
-            if (typeof limit === 'number' && limit > 0 && Number.isInteger(limit)) {
-              return res.send(mensagens.slice(-limit));
-            } else {
-              return res.status(422).send("Limite inválido. Certifique-se de que é um número inteiro positivo.");
-            }
+      let mensagens = await db.collection("messages").find({
+        $or: [
+          { to: "Todos" },
+          { to: user },
+          { from: user }
+        ]
+      }).toArray();
+  
+      if (limit) {
+        if (typeof limit === 'number' && limit > 0 && Number.isInteger(limit)) {
+          // Verificar se o número de mensagens é maior que o limite
+          if (mensagens.length > limit) {
+            mensagens = mensagens.slice(-limit);
           }
-
-        res.send(mensagens);
-        
+        } else {
+          return res.status(422).send("Limite inválido. Certifique-se de que é um número inteiro positivo.");
+        }
+      }
+  
+      res.send(mensagens);
     } catch (err) {
-        res.status(500).send(err.message);
+      res.status(500).send(err.message);
     }
-})
+  });
+  
 
 const PORT = 5000;
 
