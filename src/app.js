@@ -132,6 +132,31 @@ app.get("/messages", async (req, res) => {
     }
 });
 
+app.post("/status", async (req, res) => {
+
+    const user = req.headers.user;
+
+    if (!user) {
+        return res.status(422).send("Não recebemos o user");
+    }
+
+    try {
+        const usuario = await db.collection("participants").findOne({ name: user });
+        console.log(usuario)
+
+        if (!usuario) {
+            return res.sendStatus(404);
+          }
+
+        //await db.collection("messages").insertOne({ from: user, to: to, text: text, type: type, time: horario });
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+
+})
+
 
 const PORT = 5000;
 
