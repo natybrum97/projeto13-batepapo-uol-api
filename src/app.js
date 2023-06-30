@@ -4,6 +4,7 @@ import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import Joi from "joi";
 import dayjs from 'dayjs';
+import { stripHtml } from "string-strip-html";
 
 const app = express();
 
@@ -23,7 +24,9 @@ try {
 const db = mongoClient.db();
 
 app.post("/participants", async (req, res) => {
-    const { name } = req.body;
+
+    const sanitizedName = stripHtml(req.body.name).result.trim()
+    console.log(sanitizedName);
 
     const schemaUsuario = Joi.object({
         name: Joi.string().required()
@@ -37,16 +40,16 @@ app.post("/participants", async (req, res) => {
     }
 
     try {
-        const usuario = await db.collection("participants").findOne({ name: name });
+        const usuario = await db.collection("participants").findOne({ name: sanitizedName });
         if (usuario) return res.status(409).send("Esse usuário já existe!");
 
-        await db.collection("participants").insertOne({ name: req.body.name, lastStatus: Date.now() });
+        await db.collection("participants").insertOne({ name: sanitizedName, lastStatus: Date.now() });
 
         const data = dayjs();
 
         const horaFormatada = data.format('HH:mm:ss');
 
-        await db.collection("messages").insertOne({ from: req.body.name, to: 'Todos', text: 'entra na sala...', type: 'status', time: horaFormatada });
+        await db.collection("messages").insertOne({ from: sanitizedName, to: 'Todos', text: 'entra na sala...', type: 'status', time: horaFormatada });
 
         res.sendStatus(201);
     } catch (err) {
