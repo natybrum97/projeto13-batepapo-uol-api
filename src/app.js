@@ -160,7 +160,10 @@ app.post("/status", async (req, res) => {
             return res.sendStatus(404);
           }
 
-        //await db.collection("messages").insertOne({ from: user, to: to, text: text, type: type, time: horario });
+        await db.collection("participants").updateOne(
+            { name: user },
+            { $set: {name: user, lastStatus: Date.now()} }
+            );
 
         res.sendStatus(200);
     } catch (err) {
@@ -244,7 +247,7 @@ app.put("/messages/:ID_DA_MENSAGEM", async (req, res) => {
             { $set: {to: sanitizedTo, text: sanitizedText, type: sanitizedType, time: horario} }
             );
 
-        res.sendStatus(201);
+        res.sendStatus(200);
     } catch (err) {
         res.status(500).send(err.message);
     }
