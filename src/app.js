@@ -254,6 +254,42 @@ app.put("/messages/:ID_DA_MENSAGEM", async (req, res) => {
 
 })
 
+// ...
+
+setInterval(async () => {
+    try {
+      const cutoffTime = Date.now() - 10000; // 10 segundos atrás
+  
+      const removedParticipants = await db
+        .collection("participants")
+        .find({ lastStatus: { $lt: cutoffTime } })
+        .toArray();
+  
+      await db
+        .collection("participants")
+        .deleteMany({ lastStatus: { $lt: cutoffTime } });
+  
+      const currentTime = dayjs().format("HH:mm:ss");
+  
+      for (const participant of removedParticipants) {
+        await db.collection("messages").insertOne({
+          from: participant.name,
+          to: "Todos",
+          text: "sai da sala...",
+          type: "status",
+          time: currentTime,
+        });
+      }
+  
+      console.log(`${removedParticipants.length} participantes removidos.`);
+    } catch (err) {
+      console.error("Erro ao remover participantes:", err);
+    }
+  }, 15000); // Executa a cada 15 segundos
+  
+  // ...
+  
+
 
 const PORT = 5000;
 
