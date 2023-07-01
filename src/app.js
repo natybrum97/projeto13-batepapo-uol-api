@@ -113,7 +113,7 @@ app.post("/messages", async (req, res) => {
 
 app.get("/messages", async (req, res) => {
     const limit = parseInt(req.query.limit);
-    console.log(limit);
+    console.log(Object.keys(req.query).length)
     const user = req.headers.user;
 
     try {
@@ -124,6 +124,10 @@ app.get("/messages", async (req, res) => {
                 { from: user }
             ]
         }).toArray();
+
+        if(Object.keys(req.query).length === 0){
+            return res.send(mensagens);
+        }
 
         if (limit !== null && typeof limit === 'number' && limit > 0 && Number.isInteger(limit)) {
             // Verificar se o número de mensagens é maior que o limite
