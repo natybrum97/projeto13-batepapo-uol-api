@@ -193,6 +193,64 @@ app.delete("/messages/:ID_DA_MENSAGEM", async (req, res) => {
 	}
 })
 
+app.put("/messages/:ID_DA_MENSAGEM", async (req, res) => {
+    const { to, text, type } = req.body;
+    const user = req.headers.user;
+    const { ID_DA_MENSAGEM } = req.params;
+
+    const schemaMessage = Joi.object({
+        to: Joi.string().required(),
+        text: Joi.string().required(),
+        type: Joi.string().valid('message', 'private_message').required()
+    })
+
+    const validation = schemaMessage.validate(req.body, { abortEarly: false });
+
+    if (validation.error) {
+        const errors = validation.error.details.map(detail => detail.message);
+        return res.status(422).send(errors);
+    }
+
+    if (!user) {
+        return res.status(422).send("Não recebemos o user");
+    }
+
+    const sanitizedTo = stripHtml(to).result.trim();
+    const sanitizedText = stripHtml(text).result.trim();
+    const sanitizedType = stripHtml(type).result.trim();
+    const sanitizedUser = stripHtml(user).result.trim();
+
+    try {
+        const usuario = await db.collection("participants").findOne({ name: sanitizedUser });
+        console.log(usuario)
+        if (!usuario) return res.status(422).send("Esse usuário não está na lista de participantes! Faça o Login novamente.");
+
+        const message = await db.collection("messages").findOne({ _id: new ObjectId(ID_DA_MENSAGEM) });
+
+        if(!message){
+            return res.sendStatus(404);
+        }
+
+        if(message.from !== user){
+            return res.sendStatus(401);
+        }
+
+        const data = dayjs();
+
+        const horario = data.format('HH:mm:ss');
+
+        await db.collection("messages").updateOne(
+            { _id: new ObjectId(ID_DA_MENSAGEM) },
+            { $set: {to: sanitizedTo, text: sanitizedText, type: sanitizedType, time: horario} }
+            );
+
+        res.sendStatus(201);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+
+})
+
 
 const PORT = 5000;
 
