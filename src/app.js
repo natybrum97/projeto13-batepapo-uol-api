@@ -36,7 +36,7 @@ app.post("/participants", async (req, res) => {
         return res.status(422).send(errors);
     }
 
-    const sanitizedName = stripHtml(req.body.name).result.trim()
+    const sanitizedName = stripHtml(req.body.name).result.trim();
     console.log(sanitizedName);
 
     try {
@@ -88,8 +88,13 @@ app.post("/messages", async (req, res) => {
         return res.status(422).send("Não recebemos o user");
     }
 
+    const sanitizedTo = stripHtml(to).result.trim();
+    const sanitizedText = stripHtml(text).result.trim();
+    const sanitizedType = stripHtml(type).result.trim();
+    const sanitizedUser = stripHtml(user).result.trim();
+
     try {
-        const usuario = await db.collection("participants").findOne({ name: user });
+        const usuario = await db.collection("participants").findOne({ name: sanitizedUser });
         console.log(usuario)
         if (!usuario) return res.status(422).send("Esse usuário não está na lista de participantes! Faça o Login novamente.");
 
@@ -97,7 +102,7 @@ app.post("/messages", async (req, res) => {
 
         const horario = data.format('HH:mm:ss');
 
-        await db.collection("messages").insertOne({ from: user, to: to, text: text, type: type, time: horario });
+        await db.collection("messages").insertOne({ from: sanitizedUser, to: sanitizedTo, text: sanitizedText, type: sanitizedType, time: horario });
 
         res.sendStatus(201);
     } catch (err) {
